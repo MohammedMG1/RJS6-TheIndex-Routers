@@ -7,6 +7,9 @@ import Sidebar from "./Sidebar";
 import Loading from "./Loading";
 import AuthorsList from "./AuthorsList";
 import AuthorDetail from "./AuthorDetail";
+import BookList from "./BookList";
+
+
 
 const instance = axios.create({
   baseURL: "https://the-index-api.herokuapp.com"
@@ -15,7 +18,9 @@ const instance = axios.create({
 class App extends Component {
   state = {
     authors: [],
-    loading: true
+    books: [],
+    loading: true,
+    error: null
   };
 
   fetchAllAuthors = async () => {
@@ -23,17 +28,33 @@ class App extends Component {
     return res.data;
   };
 
+
   async componentDidMount() {
     try {
       const authors = await this.fetchAllAuthors();
+      const books = await this.fetchAllTheBooks()
       this.setState({
         authors: authors,
+        books: books,
         loading: false
       });
     } catch (err) {
       console.error(err);
     }
+
   }
+  fetchAllTheBooks = async (books) => {
+    try {
+      const response = await instance.get("/api/books/");
+      const newBooks = response.data;
+      return newBooks
+    } catch (error) {
+      console.log("something went wrong ");
+      console.log(error);
+      this.setState({ erroe: error });
+    }
+  };
+
 
   getView = () => {
     if (this.state.loading) {
@@ -49,6 +70,19 @@ class App extends Component {
               <AuthorsList {...props} authors={this.state.authors} />
             )}
           />
+          <Route
+            path="/books/:color?"
+            render={props => (
+              <BookList {...props} books={this.state.books} />
+            )}
+          />
+          <Route
+            path="/books/"
+            render={props => (
+              <BookList {...props} books={this.state.books} />
+            )}
+          />
+
         </Switch>
       );
     }
@@ -59,7 +93,7 @@ class App extends Component {
       <div id="app" className="container-fluid">
         <div className="row">
           <div className="col-2">
-            <Sidebar />
+            <Sidebar books={this.state.books} />
           </div>
           <div className="content col-10">{this.getView()}</div>
         </div>
